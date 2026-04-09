@@ -1,0 +1,312 @@
+=== Page 1 ===
+P395: Guide 7:   
+Partial Differential Equations 
+ 
+ 
+1. Start up a new notebook and title it ‘Guide7_your_name’. Enter  
+import matplotlib.pyplot as plt  
+import numpy as np 
+Introduction 
+This week we will look at solving partial differential equations (PDEs) that give solutions that depend on 
+several variables.  Common physics examples include the 1D wave equation, where the amplitude of the 
+wave depends on both position x and time t, or Laplace’s equation for the electrostatic potential which 
+depends on position (e.g., x, y, and z). 
+The topic of partial differential equations and how to solve them both analytically and numerically is 
+vast.  By doing several applications, you will learn a few of the basic techniques for solving different 
+classes of PDEs.   
+But first, let’s go over some notation.  For the PDEs that follow, we will have functions that are just 
+functions of two variables, either time and position, 𝑢(𝑡, 𝑥), or possibly two positions, 𝑢(𝑥, 𝑦).  To 
+simplify notation, we will write derivatives as 
+∂𝑢
+∂𝑡= 𝑢𝑡 
+∂2𝑢
+∂𝑥∂𝑦= 𝑢𝑥𝑦 
+So for example, Laplace’s equation (∇2𝑢= 0) in 2D cartesian coordinates would be written as 
+𝑢𝑥𝑥+ 𝑢𝑦𝑦= 0 
+Categories of PDEs 
+The three types of equations we will consider in the problems will be of the form 
+𝑢𝑥𝑥+ 𝑢𝑦𝑦= 0          (Laplace’s equation) 
+𝑢𝑡= 𝑢𝑥𝑥          (Heat/Diffusion equation) 
+𝑢𝑡𝑡= 𝑢𝑥𝑥                        (Wave equation) 
+In general, a partial differential equation in two variables (here let (x,y) represent 2 spatial dimensions or 
+one space and one time) is of the general form 
+𝑎𝑢𝑥𝑥+ 𝑏𝑢𝑥𝑦+ 𝑐𝑢𝑦𝑦+ 𝑑𝑢𝑥+ 𝑒𝑢𝑦+ 𝑓𝑢+ 𝑔= 0 
+and leads to the general classification into 3 types, 
+𝑏2 −4𝑎𝑐> 0                   (hyperbolic, e.g., the wave equation) 
+𝑏2 −4𝑎𝑐= 0     (parabolic, e.g., the heat/diffusion equation) 
+𝑏2 −4𝑎𝑐< 0                   (elliptic, e.g., Laplace’s equation) 
+
+
+=== Page 2 ===
+Task 1: Solving Laplace’s equation 
+In electrostatics, in regions that are free from any charge density, the electrostatic potential satisfies 
+Laplace’s equation.  For a 2D Cartesian geometry, Laplace’s equation for the potential 𝑉(𝑥, 𝑦) is 
+𝑉𝑥𝑥+ 𝑉𝑦𝑦= 0 
+with time-independent boundary conditions (and potentially at certain points within the region) where 
+the potential is held at fixed values.  To solve such an equation numerically, one can start by discretizing 
+space into a uniformly spaced grid in x,y with spacing h in each direction. The value of the potential at a 
+grid point is 𝑉(𝑥𝑖, 𝑦𝑗) = 𝑉𝑖,𝑗.  The finite-difference formula for the 2nd derivative at grid point (i,j) is (see 
+the Wikipedia entry on finite differences), 
+𝑉𝑥𝑥= 𝑉𝑖−1,𝑗−2𝑉𝑖,𝑗+ 𝑉𝑖+1,𝑗
+ℎ2
+ 
+and similarly for 𝑉𝑦𝑦 except now the displacements are along the column axis j. 
+1. Analysis: Show that using the finite-difference formulas for 𝑉𝑥𝑥 and 𝑉𝑦𝑦 in Laplace’s equation 
+leads to the following equation for the potential at grid point (𝑖, 𝑗), 
+𝑉𝑖,𝑗= 1
+4 (𝑉𝑖−1,𝑗+ 𝑉𝑖+1,𝑗+ 𝑉𝑖,𝑗−1 + 𝑉𝑖,𝑗+1) 
+ 
+which is just the average of the potential at the surrounding sites. 
+This result gives an iterative scheme (known as the Jacobi method) for finding the potential.  Given some 
+value 𝑉𝑖,𝑗
+𝑘 for the potential at the 𝑘𝑡ℎ iteration, the above equation gives an update rule for V at the 
+(k+1)th iteration,  
+𝑉𝑖,𝑗
+𝑘+1 =
+1
+4 (𝑉𝑖−1,𝑗
+𝑘
++ 𝑉𝑖+1,𝑗
+𝑘
++ 𝑉𝑖,𝑗−1
+𝑘
++ 𝑉𝑖,𝑗+1
+𝑘
+)              (Jacobi method) 
+Given some initial guess for the V’s and boundary conditions on V (and potentially some interior 
+locations), this equation can be iterated until convergence for the grid points on the interior. 
+The Jacobi method can be slow to converge.  A slightly faster method (the Gauss-Seidel method) is 
+based on realizing that some of the grid points in the above equation have already been updated, and 
+those updated values can be used instead.  Its update formula is 
+𝑉𝑖,𝑗
+𝑘+1 =
+1
+4 (𝑉𝑖−1,𝑗
+𝑘+1 + 𝑉𝑖+1,𝑗
+𝑘
++ 𝑉𝑖,𝑗−1
+𝑘+1 + 𝑉𝑖,𝑗+1
+𝑘
+)                (Gauss-Seidel method) 
+It uses the updated values at the prior row and column positions instead of their old values.   
+ 
+Potential with fixed boundaries 
+Solve Laplace’s equation for the two-dimensional problem of a square box 1 m on each side, with 
+boundary conditions of V = 1 volt along the bottom and right walls and V = 0 volts along the top and left 
+walls. Use a grid of spacing h = 1 cm, giving 101 grid points along each direction.  
+
+
+=== Page 3 ===
+2. Use the Jacobi update formula to calculate the electric potential until it changes by no more 
+than δ = 10−6 Volts at any grid point on any step.  Start with an initial guess for the interior grid 
+points at a value of 0 V. How many iterations does it take?  
+3. Make a heatmap of the final solution using plt.imshow.  I recommend setting the keyword 
+interpolation=’None’. 
+4. Repeat (2) and (3) except now use the Gauss-Seidel update formula.  How many iterations does 
+it take now to get the same tolerance? 
+ 
+Potential of a parallel-plate capacitor 
+A slightly more involved problem is to find the potential in the vicinity of a parallel-plate capacitor within 
+a grounded metal box (see figure below).  All boundaries are held at 0 V, and the capacitor has metal 
+plates held at V = +1 Volt and V = -1 Volt, respectively. 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+5. Use the Jacobi method to find the potential everywhere inside the box on a grid of 101 x 101 
+points.  Keep the grid points along the 2 edges of the capacitor fixed at +1 V and -1 V 
+respectively and all the boundaries fixed at 0 V.  Iterate until the incremental change is less than 
+1e-6 V for any point within the region. How many iterations did it take to converge? 
+6. Make a heat map of the resulting potential.  
+7. Analysis: Comment on if the solution differs from what you learned about for an infinite parallel-
+plate capacitor. 
+ 
+Task 2: Solving the heat/diffusion equation 
+The heat equation for the time-dependent temperature profile 𝑢(𝑡, 𝑥) in a 1D system of length L  is 
+𝑢𝑡= α 𝑢𝑥𝑥 
+where α is the thermal diffusivity of the material.  It is subject to the initial conditions 𝑢(0, 𝑥) = 𝑢0(𝑥) 
+and (potentially time-dependent) conditions on the boundaries 𝑢(𝑡, 0) = 𝑇0(𝑡) and 𝑢(𝑡, 𝐿) = 𝑇𝐿(𝑡). As 
+we did for Laplace’s equation, this equation can be solved numerically by discretizing space into a 
+4 cm 
+3 cm 
+
+
+=== Page 4 ===
+uniformly spaced grid of N+1 points separated by h, giving 𝑥𝑖= 𝑖ℎ, and discretizing time into steps of 
+size Δ𝑡, giving 𝑡𝑘= 𝑘Δ𝑡.  Let 𝑢𝑖
+𝑘 be the value of the function at grid point (𝑡𝑘, 𝑥𝑖). 
+Using the forward Euler method for time and the central-difference method for the spatial derivatives, 
+one arrives at the FTCS (forward-time central-space) equation for the heat equation, 
+𝑢𝑖
+𝑘+1 −𝑢𝑖
+𝑘
+Δ𝑡
+= α 𝑢𝑖−1
+𝑘
+−2𝑢𝑖
+𝑘+ 𝑢𝑖+1
+𝑘
+ℎ2
+ 
+This leads to the following update formula for the value at position i at the (k+1)th time step, 
+𝑢𝑖
+𝑘+1 = 𝑢𝑖
+𝑘+
+αΔ𝑡
+ℎ2 (𝑢𝑖−1
+𝑘
+−2𝑢𝑖
+𝑘+ 𝑢𝑖+1
+𝑘
+)          (FTCS method) 
+The boundary conditions translate to 𝑢0
+𝑘= 𝑇0(𝑡𝑘), 𝑢𝑁+1
+𝑘
+= 𝑇𝐿(𝑡𝑘), and 𝑢𝑖
+0 = 𝑢0(𝑥𝑖).  Starting with an 
+initial temperature profile at t=0 and with the boundary conditions, this equation gives an iterative 
+procedure for calculating the temperature at the interior points for all times.  However, there is one 
+caveat.  It is found that one needs αΔ𝑡/ℎ2 < ½ for this iterative procedure to be stable.  Or put another 
+way, the stability condition for given α and spacing h requires that 
+Δ𝑡< ℎ2/(2α)    (Stability condition on FTCS) 
+ 
+Thermal diffusion through Earth (variation on problem by Mark Newman) 
+Here you will calculate how the temperature varies as a function of depth below the Earth’s surface as 
+the season changes.  We will calculate the temperature from the surface (x=0) to a depth x=L below the 
+surface. The boundary condition at the surface (x=0) has a time-dependent temperature due to solar 
+heating, 
+𝑇0(𝑡) = 𝐴+ 𝐵sin (2π 𝑡
+𝜏
++ 𝜙) 
+where τ = 365 days, t=0 corresponds to January 1, constants A and B are the average temperature and 
+the maximum temperature change (from average), which depend on the location on the earth, and  
+sets the phase. The boundary condition at a depth x=L=40 m has the temperature constant at 
+𝑇𝐿(𝑡) = 𝐴+ 𝑚T𝐿 
+where 𝑚T =30oC/km. The thermal diffusivity through the Earth’s crust is on average around α = 0.1 
+m2/day. 
+Let’s consider our location to be in Canada’s arctic, with A=-12oC and B=20oC, and 𝜙= -1.9 radian gives 
+the lowest temperature in January with a peak in July.   
+1. Plot surface ground temperature 𝑇0(𝑡) over a whole period of 365 days. What are the surface 
+temperatures on the coldest and hottest day? 
+2. Solve the heat equation using the FTCS method for the temperature profile (from x=0 to x=L=40 
+m) over a 10-year period.  Choose a reasonable number of spatial points (e.g., 101) and then 
+choose a Δ𝑡 that satisfies the stability condition above.  Start with a guess for the initial profile 
+of 𝑇(0, 𝑥) = 𝐴, except at the boundaries where 𝑇(0,0) = 𝐴+ 𝐵𝑠𝑖𝑛(ϕ) and 𝑇(0, 𝐿) = 𝐴+ 𝑚T𝐿 
+(of course, this is not what the profile looks like, but you have to start with something). Instead 
+
+
+=== Page 5 ===
+of saving all your solutions in an array, store only the daily temperature profiles of the 10th year 
+in an array. Hint: using the FTCS method, you can just keep overwriting your solution for u(x,t) 
+as you iterate.  In the last year, store the daily solutions in an array, so that you have an array of 
+365 temperature profiles at the end). 
+Note: As you iterate forward in time, you will keep the temperature at the right boundary (x=L) 
+fixed, but the surface temperature will vary in time as given by the above equation for 𝑇0(𝑡𝑘).  It 
+will take a few years for the temperature profiles to stabilize and get rid of the initial transients 
+due to the initial guess. 
+3. Plot four temperature profiles from the last year that are separated by 3-month intervals. 
+4. Analysis:  What are some interesting features that you note? 
+5. Using the profiles from the last year, find both the maximum and minimum yearly temperature 
+at each depth x.  Plot your results for the minimum and maximum temperature as a function of 
+depth.  These should ‘envelope’ your plots in (3).   
+6. Analysis: From the graph in (5), can you state at what depth the permafrost begins?  Permafrost 
+is the depth which never gets above 0 degrees Celsius over an entire year. 
+ 
+Task 3: Solving the wave equation 
+The time variation of the amplitude of a wave at position x along a clamped string of length L satisfies 
+the PDE 
+𝑢𝑡𝑡= 𝑐2𝑢𝑥𝑥 
+where the speed of the wave is c.  It is subject to initial condition 𝑢(0, 𝑥) = 𝑢0(𝑥) and boundary 
+conditions 𝑢(𝑡, 0) = 0 and 𝑢(𝑡, 𝐿) = 0. To solve this numerically, we will discretize space and time as 
+before, but now will use a central-difference formula for both space and time, yielding 
+𝑢𝑖
+𝑘−1 −2𝑢𝑖
+𝑘+ 𝑢𝑖
+𝑘+1
+Δ𝑡2
+= 𝑐2 𝑢𝑖−1
+𝑘
+−2𝑢𝑖
+𝑘+ 𝑢𝑖+1
+𝑘
+ℎ2
+ 
+This results in the following explicit update formula 
+𝑢𝑖
+𝑘+1 = 2𝑢𝑖
+𝑘−𝑢𝑖
+𝑘−1 + 𝑐2Δ𝑡2
+ℎ2
+(𝑢𝑖−1
+𝑘
+−2𝑢𝑖
+𝑘+ 𝑢𝑖+1
+𝑘
+) 
+This is like what we had for the heat equation, except now we need the solutions at the two previous 
+time steps, k and (k-1). Thus, we need to keep track of two profiles (the current and previous) to make 
+the update. To start the iterative procedure, we need values for the amplitude of our wave at 𝑢𝑖
+0 and 𝑢𝑖
+1.  
+We will hold the string in some nonequilibrium shape g(x) (i.e., like you would when you pluck it) so that 
+𝑢𝑖
+1 = 𝑢𝑖
+0 = 𝑔(𝑥𝑖), after which point the string is let go and the wave develops. With 𝑢𝑖
+0 and 𝑢𝑖
+1 specified, 
+the update formula can be used to evolve the waveform in time. 
+ 
+Wave on a string 
+Consider the G string of a guitar.  It has a length L = 0.65 m and a wave speed of c = 254.8 m/s, which 
+gives a fundamental frequency 𝑓= 196 Hz.  The end points of the string are fixed such at 𝑢(𝑡, 0) = 0 m 
+and 𝑢(𝑡, 𝐿) = 0 m. For the initial conditions, set the shape 
+
+
+=== Page 6 ===
+𝑢0(𝑥) = 𝑢1(𝑥) = 𝑔(𝑥) = 𝐴𝑥(𝐿−𝑥)
+𝐿2
+exp [−(𝑥−𝑑)2
+2σ2
+] 
+Take 𝐴= 0.025 m, 𝑑= 0.5 m, and σ = 0.3 m. Set a reasonable number of spatial points (say 51) and a 
+time step of Δ𝑡= 1e-5 s. 
+1. Solve the wave equation using the above update formula and calculate 𝑢𝑖
+𝑘 from t = 0 to t = 5 s, 
+recording the solution at a sampling rate of 10,000/s (i.e., you should get 50,000 waveforms).   
+Now you will animate your solutions. Turn on the interactive environment with %matplotlib 
+widget. 
+2. Animate your wave solutions. 
+Now let’s hear the sound made by your solution.  To play the sound of a waveform in python:  
+3. Execute: from IPython.display import Audio.   
+Let’s first hear what a pure tone of G at 196 Hz sounds like.  This will generate a sound lasting for 5 s at a 
+sampling rate of 10,000/s.   
+4. Run the following code in a cell 
+freq = 196.0    # frequency of G note 
+framerate = 10000 
+t = np.linspace(0,5,framerate*5) 
+data = np.sin(2*np.pi*freq*t) 
+Audio(data,rate=framerate) 
+This will generate a little sound player that you can then press play on to hear the sound. 
+5. Pick a point near the middle of the string and plot its amplitude versus time from your solutions. 
+6. Using  Audio, play the waveform from (5) using a framerate of 10,000/s.   
+7. Analysis: How does it sound compared to what you heard in (4) ?  Does it sound the same or 
+different? Hint: recall from 1st-year physics about the harmonics on a string. 
+ 
+Task 4: Wrap up 
+1. Please provide any feedback on questions that you found difficult to understand because of the 
+wording. 
+2. Please provide any other comments about this notebook. 
+ 
+
+
